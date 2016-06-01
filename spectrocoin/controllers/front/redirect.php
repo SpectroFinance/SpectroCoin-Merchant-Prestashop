@@ -28,17 +28,6 @@ class SpectrocoinRedirectModuleFrontController extends ModuleFrontController {
 
     $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
 
-    if($currency->iso_code != $this->module->currency_code){
-      if($id_currency_to = Currency::getIdByIsoCode($this->module->currency_code)){
-        $currency_to = Currency::getCurrencyInstance($id_currency_to);
-        $total_converted = Tools::convertPriceFull($total, $currency, $currency_to);
-      }else{
-        die('Error occurred. Currency '.$this->module->currency_code.' is not configured.');
-      }
-    }else{
-      $total_converted = $total;
-    }
-
     require_once $this->module->getLocalPath().'/SCMerchantClient/SCMerchantClient.php';
 
     $this->module->validateOrder($cart->id, Configuration::get('SPECTROCOIN_PENDING'), $total, $this->module->displayName, NULL, NULL, $currency->id);
@@ -47,18 +36,21 @@ class SpectrocoinRedirectModuleFrontController extends ModuleFrontController {
       $this->module->SC_API_URL,
       $this->module->merchantId,
       $this->module->apiId,
-      $this->module->private_key
     );
-
+    
+	$scMerchantClient->setPrivateMerchantKey($this->module->private_key);
+	
     $createOrderRequest = new CreateOrderRequest(
       $this->module->currentOrder,
-      NULL,
-      $total_converted,
-      'Order #'.$this->module->currentOrder,
-      $this->module->culture,
+      'BTC',
+	  NULL,
+	  $currency->iso_code,
+	  $total,
+	  'Order #'.$this->module->currentOrder,
+	  $this->module->culture,
       $link->getModuleLink('spectrocoin', 'callback'),
-      $link->getModuleLink('spectrocoin', 'validation'),
-      $link->getModuleLink('spectrocoin', 'cancel')
+	  $link->getModuleLink('spectrocoin', 'success'),
+	  $link->getModuleLink('spectrocoin', 'cancel')
     );
 
     $createOrderResponse = $scMerchantClient->createOrder($createOrderRequest);
