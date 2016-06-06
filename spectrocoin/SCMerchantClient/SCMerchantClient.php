@@ -18,8 +18,9 @@ class SCMerchantClient
 {
 
 	private $merchantApiUrl;
-	private $privateMerchantCert;
-	private $publicSpectroCoinCertLocation = 'https://spectrocoin.com/files/merchant.public.pem';
+	private $privateMerchantCertLocation;
+	private $privateMerchantKey;
+	private $publicSpectroCoinCertLocation;
 
 	private $merchantId;
 	private $apiId;
@@ -34,13 +35,21 @@ class SCMerchantClient
 	 */
 	function __construct($merchantApiUrl, $merchantId, $apiId, $private_key, $debug = false)
 	{
+		$this->privateMerchantCertLocation = dirname(__FILE__) . '/../cert/mprivate.pem';
+		$this->publicSpectroCoinCertLocation = 'https://spectrocoin.com/files/merchant.public.pem';
 		$this->merchantApiUrl = $merchantApiUrl;
 		$this->merchantId = $merchantId;
 		$this->apiId = $apiId;
-		$this->privateMerchantCert = $private_key;
 		$this->debug = $debug;
 	}
 
+	/**
+	* @param $privateKey
+	*/
+	public function setPrivateMerchantKey($privateKey) {
+		$this->privateMerchantKey = $privateKey;
+	}
+	
 	/**
 	 * @param CreateOrderRequest $request
 	 * @return ApiError|CreateOrderResponse
@@ -53,6 +62,7 @@ class SCMerchantClient
 			'orderId' => $request->getOrderId(),
 			'payCurrency' => $request->getPayCurrency(),
 			'payAmount' => $request->getPayAmount(),
+			'receiveCurrency' => $request->getReceiveCurrency(),
 			'receiveAmount' => $request->getReceiveAmount(),
 			'description' => $request->getDescription(),
 			'culture' => $request->getCulture(),
@@ -85,8 +95,9 @@ class SCMerchantClient
 
 	private function generateSignature($data)
 	{
-		// ready private key
-		$pkeyid = openssl_pkey_get_private($this->privateMerchantCert);
+		// fetch private key from file and ready it
+		$privateKey = $this->privateMerchantKey != null ? $this->privateMerchantKey : file_get_contents($this->privateMerchantCertLocation);
+		$pkeyid = openssl_pkey_get_private($privateKey);
 
 		// compute signature
 		$s = openssl_sign($data, $signature, $pkeyid, OPENSSL_ALGO_SHA1);
