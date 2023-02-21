@@ -1,6 +1,12 @@
 SpectroCoin Bitcoin Payment Extension
 ---------------
 
+**MOVED**
+
+Up to date version can be found in [SpectroCoin Repo](https://github.com/SpectroCoin/PrestaShop-Bitcoin-Payment-Gateway-Module)
+
+---------------
+
 This merchant module integrates [SpectroCoin](https://spectrocoin.com/) Payments with [Prestashop](http://www.prestashop.com/) to accept [Bitcoin](https://bitcoin.org) payments.
 
 **INSTALLATION**
